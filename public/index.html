@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Flipbook</title>
+    
+    <!-- DearFlip CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.0.3/dflip/css/dflip.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.0.3/dflip/css/themify-icons.min.css" rel="stylesheet">
+    
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f9; margin: 0; padding: 20px; }
+        .upload-container { margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; }
+        input[type="file"] { margin-bottom: 15px; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        button:hover { background-color: #0056b3; }
+        #flipbook-container { height: 80vh; width: 100%; margin-top: 20px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="upload-container">
+        <h2>Upload PDF to Flipbook</h2>
+        <form id="uploadForm">
+            <input type="file" id="pdfInput" accept="application/pdf" required>
+            <br>
+            <button type="submit">Convert to Flipbook</button>
+        </form>
+        <p id="status"></p>
+    </div>
+
+    <!-- The container where the flipbook will be rendered -->
+    <div id="flipbook-container"></div>
+
+    <!-- jQuery and DearFlip JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dearflip-webgl@1.0.3/dflip/js/dflip.min.js"></script>
+
+    <script>
+        $('#uploadForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = $('#pdfInput')[0].files[0];
+            if (!fileInput) return;
+
+            const formData = new FormData();
+            formData.append('pdfDocument', fileInput);
+
+            $('#status').text('Uploading and processing...');
+
+            $.ajax({
+                url: '/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    $('#status').text('Success! Loading Flipbook...');
+                    
+                    // Hide upload container and show flipbook container
+                    $('.upload-container').hide();
+                    $('#flipbook-container').show();
+
+                    // Initialize the Flipbook using DearFlip
+                    var flipBookOptions = {
+                        webgl: true, // 3D realistic flip effect
+                        backgroundColor: "#f4f4f9"
+                    };
+                    
+                    // Create the flipbook dynamically
+                    $('#flipbook-container').FlipBook(response.pdfUrl, flipBookOptions);
+                },
+                error: function() {
+                    $('#status').text('Error uploading file. Please try again.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
